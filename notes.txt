@@ -1,0 +1,9 @@
+In index.css, we wrote:
+.active hr{
+    @apply block
+}
+it says apply block display to hidden hr, where class 'active' exists
+
+frontend project live link - "https://67f532cf6be6c88448ee86d3--relaxed-peony-84fe0a.netlify.app/"
+
+after relaoding webpage state variable resets
