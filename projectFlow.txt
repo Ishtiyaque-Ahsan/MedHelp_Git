@@ -1,0 +1,13 @@
+V1:
+YT only
+Deadline: 31 oct, 2025
+
+V2:
+Add Admin functionality which are the data analysis of appointments and other data
+in graphical mode
+
+V3:
+Add Skin Model to it
+
+V4:
+Add chatbot feature

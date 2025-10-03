@@ -1,6 +1,7 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
+import appointmentModel from "../models/appointmentModel.js";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -173,4 +174,46 @@ const bookAppointment = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment };
+//api to list all appointments of a user in My Appointments page
+const listAppointments = async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const appointments = await appointmentModel.find({ userId });
+    res.json({ success: true, appointments });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+//api to cancel appointment
+const cancelAppointment = async (req, res) => {
+  try {
+    const { userId, appointmentId } = req.body;
+    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (appointmentData.userId !== userId) {
+      return res.json({ success: false, message: "Unauthorized access" });
+    } 
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
+    //free the slot in doctor's slots_booked
+    const {docId, slotDate, slotTime} = appointmentData;
+
+    const docData = await doctorModel.findById(docId).select("-password");
+    let slots_booked = docData.slots_booked;
+    slots_booked[slotDate] = slots_booked[slotDate].filter((time) => time !== slotTime); //removing the slotTime from slots_booked array
+    //filter((time) => time !== slotTime) will return all the time slots except the one which is equal to slotTime
+    //if after removing the slotTime, the array becomes empty, then we will delete that date from slots_booked
+    if (slots_booked[slotDate].length === 0) {
+      delete slots_booked[slotDate];
+    }
+    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+    res.json({ success: true, message: "Appointment cancelled successfully" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointments, cancelAppointment };
